@@ -54,18 +54,44 @@ public class ChatController : Controller
         string? uploadedImagePath = null;
         string aiResponse;
 
+        var previousMessages = await _context.ChatMessages
+    .OrderByDescending(x => x.CreatedAt)
+    .Take(10)
+    .OrderBy(x => x.CreatedAt)
+    .ToListAsync();
+
+        var memoryBuilder = new System.Text.StringBuilder();
+
+        memoryBuilder.AppendLine("You are a helpful AI assistant.");
+        memoryBuilder.AppendLine("Use the previous conversation context if relevant.");
+        memoryBuilder.AppendLine();
+
+        foreach (var chat in previousMessages)
+        {
+            memoryBuilder.AppendLine($"User: {chat.UserMessage}");
+            memoryBuilder.AppendLine($"AI: {chat.AiResponse}");
+        }
+
+        memoryBuilder.AppendLine();
+        memoryBuilder.AppendLine($"Current User Message: {model.Message}");
+
         try
         {
             if (model.ImageFile != null)
             {
                 uploadedImagePath = await SaveUploadedImageAsync(model.ImageFile);
 
-                aiResponse = await _geminiService.GenerateResponseAsync(
-                    $"{model.Message ?? "Analyze this image."}\n\nNote: Image uploaded at {uploadedImagePath}.");
+                var fullImagePath = Path.Combine(
+                    _environment.WebRootPath,
+                    uploadedImagePath.TrimStart('/').Replace("/", Path.DirectorySeparatorChar.ToString()));
+
+                aiResponse = await _geminiService.AnalyzeImageAsync(
+                    model.Message ?? "Analyze this image clearly.",
+                    fullImagePath);
             }
             else
             {
-                aiResponse = await _geminiService.GenerateResponseAsync(model.Message!);
+                aiResponse = await _geminiService.GenerateResponseAsync(memoryBuilder.ToString());
             }
         }
         catch (Exception ex)
