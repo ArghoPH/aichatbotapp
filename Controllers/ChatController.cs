@@ -96,7 +96,18 @@ public class ChatController : Controller
         }
         catch (Exception ex)
         {
-            aiResponse = "AI service is temporarily unavailable. Please try again later.\n\nTechnical details: " + ex.Message;
+            if (ex.Message.Contains("RESOURCE_EXHAUSTED") || ex.Message.Contains("quota"))
+            {
+                aiResponse = "Gemini free API quota limit reached. Please wait a little and try again later.";
+            }
+            else if (ex.Message.Contains("UNAVAILABLE") || ex.Message.Contains("503"))
+            {
+                aiResponse = "Gemini AI service is busy right now. Please try again after a moment.";
+            }
+            else
+            {
+                aiResponse = "AI service is temporarily unavailable. Please try again later.";
+            }
         }
 
         var chatMessage = new ChatMessage

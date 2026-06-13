@@ -4,131 +4,283 @@
     ViewData["Title"] = "AI Smart Chatbot";
 }
 
-<div id="app" class="container mt-4">
+<div class="min-h-screen bg-[#070B14] text-slate-100">
+    <div class="fixed inset-0 -z-10">
+        <div class="absolute left-[-120px] top-[-120px] h-80 w-80 rounded-full bg-blue-600/30 blur-3xl"></div>
+        <div class="absolute right-[-120px] bottom-[-120px] h-96 w-96 rounded-full bg-purple-600/20 blur-3xl"></div>
+    </div>
 
-    <h2 class="mb-4">AI Smart Chatbot</h2>
+    <div class="grid min-h-screen grid-cols-1 lg:grid-cols-[280px_1fr]">
 
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger">
-            @TempData["Error"]
-        </div>
-    }
-
-    <div class="row">
-        <div class="col-md-7">
-
-            <div class="card mb-4">
-                <div class="card-header">
-                    Chat with AI
+        <aside class="hidden lg:flex flex-col border-r border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
+            <div class="mb-8 flex items-center gap-3">
+                <div
+                    class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 shadow-lg shadow-blue-600/30">
+                    <i class="fa-solid fa-robot text-xl"></i>
                 </div>
-
-                <div class="card-body">
-                    <form asp-controller="Chat" asp-action="SendMessage" method="post" enctype="multipart/form-data">
-                        <div class="mb-3">
-                            <textarea name="Message" class="form-control" rows="4"
-                                      placeholder="Ask anything or describe uploaded image..."></textarea>
-                        </div>
-
-                        <div class="mb-3">
-                            <input type="file" name="ImageFile" class="form-control" accept="image/*" />
-                        </div>
-
-                        <button type="submit" class="btn btn-primary">
-                            Send
-                        </button>
-                    </form>
+                <div>
+                    <h1 class="font-bold text-lg">AI Chatbot</h1>
+                    <p class="text-xs text-slate-400">Gemini Powered</p>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-header">
-                    Chat History
+            <button
+                class="mb-5 rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-left text-sm font-semibold hover:bg-white/15 transition">
+                <i class="fa-solid fa-plus mr-2 text-blue-300"></i>
+                New Conversation
+            </button>
+
+            <div class="space-y-2">
+                <p class="mb-3 text-xs uppercase tracking-widest text-slate-500">Features</p>
+
+                <div class="rounded-2xl bg-blue-600/15 border border-blue-500/20 px-4 py-3 text-sm">
+                    <i class="fa-solid fa-comments mr-2 text-blue-300"></i>
+                    Text Chat
                 </div>
 
-                <div class="card-body">
-                    @if (Model.ChatHistory.Any())
-                    {
-                        foreach (var chat in Model.ChatHistory)
+                <div class="rounded-2xl bg-white/[0.04] border border-white/10 px-4 py-3 text-sm text-slate-300">
+                    <i class="fa-solid fa-image mr-2 text-emerald-300"></i>
+                    Image Analysis
+                </div>
+
+                <div class="rounded-2xl bg-white/[0.04] border border-white/10 px-4 py-3 text-sm text-slate-300">
+                    <i class="fa-solid fa-brain mr-2 text-purple-300"></i>
+                    Memory Enabled
+                </div>
+            </div>
+
+            <div class="mt-auto rounded-3xl border border-white/10 bg-white/[0.05] p-4">
+                <p class="text-sm font-semibold">AI Status</p>
+                <p class="mt-1 text-xs text-slate-400">Free API quota may limit requests.</p>
+                <div
+                    class="mt-3 inline-flex items-center rounded-full bg-emerald-500/10 px-3 py-1 text-xs text-emerald-300">
+                    <span class="mr-2 h-2 w-2 rounded-full bg-emerald-400"></span>
+                    Active
+                </div>
+            </div>
+        </aside>
+
+        <main class="flex min-h-screen flex-col">
+
+            <header
+                class="flex items-center justify-between border-b border-white/10 bg-white/[0.03] px-5 py-4 backdrop-blur-xl">
+                <div>
+                    <h2 class="text-xl font-bold">AI Smart Chat</h2>
+                    <p class="text-sm text-slate-400">Ask questions, upload images, and keep conversation memory.</p>
+                </div>
+
+                <button class="rounded-2xl border border-white/10 bg-white/10 px-4 py-2 hover:bg-white/15 transition">
+                    <i class="fa-solid fa-sun text-yellow-300"></i>
+                </button>
+            </header>
+
+            <section class="grid flex-1 grid-cols-1 xl:grid-cols-[1fr_360px] gap-5 p-5 overflow-hidden min-h-0">
+
+                <div
+                    class="flex h-[calc(100vh-130px)] min-h-[560px] flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/[0.06] shadow-2xl backdrop-blur-xl">
+
+                    <div class="flex items-center justify-between border-b border-white/10 px-5 py-4">
+                        <div>
+                            <h3 class="font-semibold">
+                                <i class="fa-solid fa-message mr-2 text-blue-300"></i>
+                                Conversation
+                            </h3>
+                            <p class="text-xs text-slate-500">Latest 20 messages</p>
+                        </div>
+
+                        <span
+                            class="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1 text-xs text-emerald-300">
+                            <i class="fa-solid fa-circle text-[7px] mr-1"></i>
+                            Online
+                        </span>
+                    </div>
+
+                    <div id="chatBody" class="flex-1 min-h-0 space-y-6 overflow-y-auto p-5 scroll-smooth">
+
+                        @if (Model.ChatHistory.Any())
                         {
-                            <div class="border rounded p-3 mb-3">
-                                <strong>You:</strong>
-                                <p>@chat.UserMessage</p>
+                            foreach (var chat in Model.ChatHistory.OrderBy(x => x.CreatedAt))
+                            {
+                                <div class="flex justify-end">
+                                    <div class="max-w-[82%]">
+                                        <div class="mb-2 flex items-center justify-end gap-2 text-xs text-slate-500">
+                                            <span>You</span>
+                                            <div class="flex h-7 w-7 items-center justify-center rounded-full bg-blue-600">
+                                                <i class="fa-solid fa-user text-xs text-white"></i>
+                                            </div>
+                                        </div>
 
-                                @if (!string.IsNullOrWhiteSpace(chat.UploadedImagePath))
-                                {
-                                    <img src="@chat.UploadedImagePath" class="img-fluid rounded mb-2" style="max-height: 220px;" />
-                                }
+                                        <div
+                                            class="rounded-3xl rounded-tr-md bg-blue-600 px-5 py-4 shadow-lg shadow-blue-600/20">
+                                            <p class="whitespace-pre-line text-white">@chat.UserMessage</p>
 
-                                <strong>AI:</strong>
-                                <p>@chat.AiResponse</p>
+                                            @if (!string.IsNullOrWhiteSpace(chat.UploadedImagePath))
+                                            {
+                                                <img src="@chat.UploadedImagePath"
+                                                     class="mt-4 max-h-64 rounded-2xl border border-white/20 shadow-xl" />
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
 
-                                <small class="text-muted">
-                                    @chat.CreatedAt.ToString("dd MMM yyyy, hh:mm tt")
-                                </small>
-                            </div>
+                                <div class="flex justify-start">
+                                    <div class="max-w-[82%]">
+                                        <div class="mb-2 flex items-center gap-2 text-xs text-slate-500">
+                                            <div class="flex h-7 w-7 items-center justify-center rounded-full bg-slate-700">
+                                                <i class="fa-solid fa-robot text-xs text-blue-300"></i>
+                                            </div>
+                                            <span>Gemini AI</span>
+                                        </div>
+
+                                        <div
+                                            class="rounded-3xl rounded-tl-md border border-white/10 bg-slate-900/80 px-5 py-4 shadow-xl">
+                                            <p class="whitespace-pre-line leading-relaxed text-slate-100">@chat.AiResponse</p>
+
+                                            <div class="mt-3 text-[11px] text-slate-500">
+                                                <i class="fa-regular fa-clock mr-1"></i>
+                                                @chat.CreatedAt.ToString("dd MMM yyyy, hh:mm tt")
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
                         }
-                    }
-                    else
-                    {
-                        <p class="text-muted">No chat yet.</p>
-                    }
-                </div>
-            </div>
-
-        </div>
-
-        <div class="col-md-5">
-
-            <div class="card mb-4">
-                <div class="card-header">
-                    Generate Image
-                </div>
-
-                <div class="card-body">
-                    <form asp-controller="Chat" asp-action="GenerateImage" method="post">
-                        <div class="mb-3">
-                            <textarea name="ImagePrompt" class="form-control" rows="4"
-                                      placeholder="Example: A futuristic robot in Dhaka city, cinematic style"></textarea>
-                        </div>
-
-                        <button type="submit" class="btn btn-success">
-                            Generate Image
-                        </button>
-                    </form>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    Generated Images
-                </div>
-
-                <div class="card-body">
-                    @if (Model.GeneratedImages.Any())
-                    {
-                        foreach (var image in Model.GeneratedImages)
+                        else
                         {
-                            <div class="border rounded p-2 mb-3">
-                                <img src="@image.ImageUrl" class="img-fluid rounded mb-2" />
-
-                                <p class="small">
-                                    <strong>Prompt:</strong> @image.Prompt
+                            <div class="flex h-full flex-col items-center justify-center text-center">
+                                <div
+                                    class="mb-4 flex h-20 w-20 items-center justify-center rounded-3xl border border-blue-400/20 bg-blue-600/20">
+                                    <i class="fa-solid fa-robot text-4xl text-blue-300"></i>
+                                </div>
+                                <h3 class="text-xl font-semibold">Start your first conversation</h3>
+                                <p class="mt-2 text-sm text-slate-400">Send a message or upload an image for AI analysis.
                                 </p>
-
-                                <small class="text-muted">
-                                    @image.GeneratedAt.ToString("dd MMM yyyy, hh:mm tt")
-                                </small>
                             </div>
                         }
-                    }
-                    else
-                    {
-                        <p class="text-muted">No generated images yet.</p>
-                    }
-                </div>
-            </div>
 
-        </div>
+                    </div>
+
+                    <div class="border-t border-white/10 bg-slate-950/50 p-5">
+                        @if (TempData["Error"] != null)
+                        {
+                            <div class="mb-3 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-red-300">
+                                @TempData["Error"]
+                            </div>
+                        }
+
+                        <form asp-controller="Chat" asp-action="SendMessage" method="post"
+                              enctype="multipart/form-data">
+                            <textarea name="Message" rows="3"
+                                      class="w-full resize-none rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                      placeholder="Type your message or ask about uploaded image..."></textarea>
+
+                            <div class="mt-3 flex gap-3">
+                                <label
+                                    class="flex-1 cursor-pointer rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-slate-300 hover:bg-white/15 transition">
+                                    <i class="fa-solid fa-paperclip mr-2 text-blue-300"></i>
+                                    <span id="fileName">Attach image</span>
+                                    <input id="imageInput" type="file" name="ImageFile" accept="image/*"
+                                           class="hidden" />
+                                </label>
+
+                                <button type="submit"
+                                        class="rounded-2xl bg-blue-600 px-6 py-3 font-semibold text-white shadow-lg shadow-blue-600/30 hover:bg-blue-700 transition">
+                                    Send
+                                    <i class="fa-solid fa-paper-plane ml-2"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <aside class="space-y-5 overflow-y-auto">
+                    <div class="rounded-3xl border border-white/10 bg-white/[0.06] p-5 shadow-2xl backdrop-blur-xl">
+                        <h3 class="text-lg font-bold">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-2 text-purple-300"></i>
+                            Image Studio
+                        </h3>
+
+                        <p class="mt-2 text-sm text-slate-400">
+                            Demo mode active. Real image generation can be added later.
+                        </p>
+
+                        <form asp-controller="Chat" asp-action="GenerateImage" method="post" class="mt-4">
+                            <textarea name="ImagePrompt" rows="5"
+                                      class="w-full resize-none rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                      placeholder="Describe image idea..."></textarea>
+
+                            <button
+                                class="mt-3 w-full rounded-2xl bg-purple-600 py-3 font-semibold text-white shadow-lg shadow-purple-600/30 hover:bg-purple-700 transition">
+                                Generate Demo
+                                <i class="fa-solid fa-image ml-2"></i>
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="rounded-3xl border border-white/10 bg-white/[0.06] p-5 shadow-2xl backdrop-blur-xl">
+                        <h3 class="mb-4 text-lg font-bold">
+                            <i class="fa-solid fa-images mr-2 text-emerald-300"></i>
+                            Gallery
+                        </h3>
+
+                        @if (Model.GeneratedImages.Any())
+                        {
+                            foreach (var image in Model.GeneratedImages)
+                            {
+                                <div class="mb-4 rounded-2xl border border-white/10 bg-slate-950/50 p-3">
+                                    <img src="@image.ImageUrl" class="mb-3 w-full rounded-xl" />
+
+                                    <p class="text-sm text-slate-300">
+                                        <strong>Prompt:</strong> @image.Prompt
+                                    </p>
+
+                                    <p class="mt-2 text-xs text-slate-500">
+                                        @image.GeneratedAt.ToString("dd MMM yyyy, hh:mm tt")
+                                    </p>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-sm text-slate-400">No generated images yet.</p>
+                        }
+                    </div>
+                </aside>
+            </section>
+        </main>
     </div>
 </div>
+
+<script>
+    function scrollChatToBottom() {
+        const chatBody = document.getElementById("chatBody");
+
+        if (!chatBody) return;
+
+        requestAnimationFrame(() => {
+            chatBody.scrollTop = chatBody.scrollHeight;
+        });
+
+        setTimeout(() => {
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }, 50);
+
+        setTimeout(() => {
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }, 200);
+    }
+
+    window.addEventListener("DOMContentLoaded", scrollChatToBottom);
+    window.addEventListener("load", scrollChatToBottom);
+
+    const imageInput = document.getElementById("imageInput");
+    const fileName = document.getElementById("fileName");
+
+    if (imageInput && fileName) {
+        imageInput.addEventListener("change", function () {
+            fileName.textContent = this.files.length > 0
+                ? this.files[0].name
+                : "Attach image";
+        });
+    }
+</script>

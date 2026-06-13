@@ -1,10 +1,11 @@
-using AiChatbotApp.Services;
 using AiChatbotApp.Data;
+using AiChatbotApp.Services;
+using AiChatbotApp.Services.Providers;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add MVC services
+// Add MVC + API controller services
 builder.Services.AddControllersWithViews();
 
 // Add Database Context
@@ -12,12 +13,18 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Add HttpClient for OpenAI API calls
+// Add HttpClient for external AI API calls
 builder.Services.AddHttpClient();
 
+// Core AI services
 builder.Services.AddScoped<GeminiService>();
 
-builder.Services.AddScoped<AiChatbotApp.Services.OpenAIService>();
+// AI Provider fallback services
+builder.Services.AddScoped<IAiTextProvider, GeminiTextProvider>();
+builder.Services.AddScoped<IAiTextProvider, GroqTextProvider>();
+builder.Services.AddScoped<IAiTextProvider, OpenRouterTextProvider>();
+
+builder.Services.AddScoped<AiProviderRouterService>();
 
 // Add Session
 builder.Services.AddDistributedMemoryCache();
@@ -36,9 +43,10 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
-}
 
-app.UseHttpsRedirection();
+    // In production, force HTTPS
+    app.UseHttpsRedirection();
+}
 
 // Important for wwwroot/uploads and wwwroot/generated
 app.UseStaticFiles();
@@ -49,6 +57,12 @@ app.UseSession();
 
 app.UseAuthorization();
 
+// Important for attribute routed API controllers:
+// /api/chat/history
+// /api/chat/send
+app.MapControllers();
+
+// Old MVC route. Not our main frontend anymore, but keeping it does not hurt.
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Chat}/{action=Index}/{id?}");

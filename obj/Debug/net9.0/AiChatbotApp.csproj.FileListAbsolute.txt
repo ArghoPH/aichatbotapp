@@ -241,4 +241,6 @@ D:\Personal Learning\dotnet\AiChatbotApp\obj\Debug\net9.0\ref\AiChatbotApp.dll
 D:\Personal Learning\dotnet\AiChatbotApp\obj\Debug\net9.0\AiChatbotApp.sourcelink.json
 D:\Personal Learning\dotnet\AiChatbotApp\bin\Debug\net9.0\package-lock.json
 D:\Personal Learning\dotnet\AiChatbotApp\bin\Debug\net9.0\package.json
-D:\Personal Learning\dotnet\AiChatbotApp\obj\Debug\net9.0\compressed\08asvmy4w8-3c4owxji60.gz
+D:\Personal Learning\dotnet\AiChatbotApp\obj\Debug\net9.0\compressed\08asvmy4w8-bfkjybojsu.gz
+D:\Personal Learning\dotnet\AiChatbotApp\bin\Debug\net9.0\frontend\package-lock.json
+D:\Personal Learning\dotnet\AiChatbotApp\bin\Debug\net9.0\frontend\package.json
