@@ -295,7 +295,7 @@
                 </p>
                 <p>
                   <span class="text-slate-300 font-medium">Vision AI:</span>
-                  Gemini + GitHub Models
+                  Engine Based Models (Limited)
                 </p>
                 <p>
                   <span class="text-slate-300 font-medium">Chats:</span>
