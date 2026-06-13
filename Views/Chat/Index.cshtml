@@ -1,0 +1,134 @@
+@model AiChatbotApp.ViewModels.ChatViewModel
+
+@{
+    ViewData["Title"] = "AI Smart Chatbot";
+}
+
+<div id="app" class="container mt-4">
+
+    <h2 class="mb-4">AI Smart Chatbot</h2>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-7">
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    Chat with AI
+                </div>
+
+                <div class="card-body">
+                    <form asp-controller="Chat" asp-action="SendMessage" method="post" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <textarea name="Message" class="form-control" rows="4"
+                                      placeholder="Ask anything or describe uploaded image..."></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <input type="file" name="ImageFile" class="form-control" accept="image/*" />
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            Send
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    Chat History
+                </div>
+
+                <div class="card-body">
+                    @if (Model.ChatHistory.Any())
+                    {
+                        foreach (var chat in Model.ChatHistory)
+                        {
+                            <div class="border rounded p-3 mb-3">
+                                <strong>You:</strong>
+                                <p>@chat.UserMessage</p>
+
+                                @if (!string.IsNullOrWhiteSpace(chat.UploadedImagePath))
+                                {
+                                    <img src="@chat.UploadedImagePath" class="img-fluid rounded mb-2" style="max-height: 220px;" />
+                                }
+
+                                <strong>AI:</strong>
+                                <p>@chat.AiResponse</p>
+
+                                <small class="text-muted">
+                                    @chat.CreatedAt.ToString("dd MMM yyyy, hh:mm tt")
+                                </small>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted">No chat yet.</p>
+                    }
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-md-5">
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    Generate Image
+                </div>
+
+                <div class="card-body">
+                    <form asp-controller="Chat" asp-action="GenerateImage" method="post">
+                        <div class="mb-3">
+                            <textarea name="ImagePrompt" class="form-control" rows="4"
+                                      placeholder="Example: A futuristic robot in Dhaka city, cinematic style"></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-success">
+                            Generate Image
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    Generated Images
+                </div>
+
+                <div class="card-body">
+                    @if (Model.GeneratedImages.Any())
+                    {
+                        foreach (var image in Model.GeneratedImages)
+                        {
+                            <div class="border rounded p-2 mb-3">
+                                <img src="@image.ImageUrl" class="img-fluid rounded mb-2" />
+
+                                <p class="small">
+                                    <strong>Prompt:</strong> @image.Prompt
+                                </p>
+
+                                <small class="text-muted">
+                                    @image.GeneratedAt.ToString("dd MMM yyyy, hh:mm tt")
+                                </small>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted">No generated images yet.</p>
+                    }
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
