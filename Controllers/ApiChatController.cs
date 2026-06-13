@@ -15,16 +15,19 @@ public class ApiChatController : ControllerBase
     private readonly AiProviderRouterService _aiRouter;
     private readonly AiVisionRouterService _visionRouter;
     private readonly IWebHostEnvironment _environment;
+    private readonly CloudflareImageGenerationService _imageGenerationService;
 
     public ApiChatController(
-        ApplicationDbContext context,
-        AiProviderRouterService aiRouter,
-        AiVisionRouterService visionRouter,
-        IWebHostEnvironment environment)
+    ApplicationDbContext context,
+    AiProviderRouterService aiRouter,
+    AiVisionRouterService visionRouter,
+    CloudflareImageGenerationService imageGenerationService,
+    IWebHostEnvironment environment)
     {
         _context = context;
         _aiRouter = aiRouter;
         _visionRouter = visionRouter;
+        _imageGenerationService = imageGenerationService;
         _environment = environment;
     }
 
@@ -266,14 +269,32 @@ public class ApiChatController : ControllerBase
             }
             else
             {
-                var promptWithMemory = BuildMemoryPrompt(
-                    conversation.Id,
-                    message!);
+                if (IsImageGenerationRequest(message!))
+                {
+                    var imagePrompt = ExtractImageGenerationPrompt(message!);
 
-                var routerResult = await _aiRouter.GenerateTextAsync(promptWithMemory);
+                    var generatedImage = await _imageGenerationService.GenerateImageAsync(
+                        imagePrompt);
 
-                providerName = routerResult.ProviderName;
-                aiResponse = routerResult.Text;
+                    providerName = "Cloudflare Workers AI";
+
+                    aiResponse =
+                        $"### Generated Image\n\n" +
+                        $"![Generated Image]({generatedImage.ImagePath})\n\n" +
+                        $"**Prompt:** {generatedImage.Prompt}\n\n" +
+                        $"**Model:** `{generatedImage.Model}`";
+                }
+                else
+                {
+                    var promptWithMemory = BuildMemoryPrompt(
+                        conversation.Id,
+                        message!);
+
+                    var routerResult = await _aiRouter.GenerateTextAsync(promptWithMemory);
+
+                    providerName = routerResult.ProviderName;
+                    aiResponse = routerResult.Text;
+                }
             }
         }
         catch (Exception ex)
@@ -480,6 +501,42 @@ public class ApiChatController : ControllerBase
         {
             System.IO.File.Delete(fullImagePath);
         }
+    }
+
+    private bool IsImageGenerationRequest(string message)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            return false;
+        }
+
+        var text = message.Trim().ToLower();
+
+        return text.StartsWith("/image ") ||
+               text.StartsWith("/generate-image ") ||
+               text.StartsWith("generate image:");
+    }
+
+    private string ExtractImageGenerationPrompt(string message)
+    {
+        var prompt = message.Trim();
+
+        if (prompt.StartsWith("/image ", StringComparison.OrdinalIgnoreCase))
+        {
+            return prompt[7..].Trim();
+        }
+
+        if (prompt.StartsWith("/generate-image ", StringComparison.OrdinalIgnoreCase))
+        {
+            return prompt[16..].Trim();
+        }
+
+        if (prompt.StartsWith("generate image:", StringComparison.OrdinalIgnoreCase))
+        {
+            return prompt["generate image:".Length..].Trim();
+        }
+
+        return prompt;
     }
 
     private string GenerateConversationTitle(string? message, bool hasImage)

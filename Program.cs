@@ -19,6 +19,9 @@ builder.Services.AddHttpClient();
 // Core AI service for Gemini image analysis
 builder.Services.AddScoped<GeminiService>();
 
+// Image generation service
+builder.Services.AddScoped<CloudflareImageGenerationService>();
+
 // AI Text Provider fallback chain
 builder.Services.AddScoped<IAiTextProvider, GeminiTextProvider>();
 builder.Services.AddScoped<IAiTextProvider, GroqTextProvider>();
