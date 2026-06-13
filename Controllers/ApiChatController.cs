@@ -56,6 +56,37 @@ public class ApiChatController : ControllerBase
         return Ok(statuses);
     }
 
+    [HttpDelete("clear")]
+    public async Task<IActionResult> ClearChatHistory()
+    {
+        var messages = await _context.ChatMessages.ToListAsync();
+
+        foreach (var message in messages)
+        {
+            if (!string.IsNullOrWhiteSpace(message.UploadedImagePath))
+            {
+                var fullImagePath = Path.Combine(
+                    _environment.WebRootPath,
+                    message.UploadedImagePath
+                        .TrimStart('/')
+                        .Replace("/", Path.DirectorySeparatorChar.ToString()));
+
+                if (System.IO.File.Exists(fullImagePath))
+                {
+                    System.IO.File.Delete(fullImagePath);
+                }
+            }
+        }
+
+        _context.ChatMessages.RemoveRange(messages);
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Chat history cleared successfully."
+        });
+    }
+
     [HttpPost("send")]
     public async Task<IActionResult> SendMessage(
         [FromForm] string? message,
