@@ -240,7 +240,9 @@ public class ApiChatController : ControllerBase
 
         string? uploadedImagePath = null;
         string? providerName = null;
+        string? generatedImagePath = null;
         string aiResponse;
+
 
         try
         {
@@ -274,9 +276,9 @@ public class ApiChatController : ControllerBase
                     var imagePrompt = ExtractImageGenerationPrompt(message!);
 
                     var generatedImage = await _imageGenerationService.GenerateImageAsync(
-                        imagePrompt);
-
+                    imagePrompt);
                     providerName = "Cloudflare Workers AI";
+                    generatedImagePath = generatedImage.ImagePath;
 
                     aiResponse =
                         $"### Generated Image\n\n" +
@@ -336,7 +338,8 @@ public class ApiChatController : ControllerBase
             chatMessage.AiResponse,
             chatMessage.UploadedImagePath,
             chatMessage.CreatedAt,
-            ProviderName = providerName
+            ProviderName = providerName,
+            GeneratedImagePath = generatedImagePath
         });
     }
 
