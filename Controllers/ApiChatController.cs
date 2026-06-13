@@ -28,16 +28,145 @@ public class ApiChatController : ControllerBase
         _environment = environment;
     }
 
-    [HttpGet("history")]
-    public async Task<IActionResult> GetHistory()
+    [HttpGet("conversations")]
+    public async Task<IActionResult> GetConversations()
     {
+        var conversations = await _context.Conversations
+            .OrderByDescending(x => x.UpdatedAt)
+            .Select(x => new
+            {
+                id = x.Id,
+                title = x.Title,
+                createdAt = x.CreatedAt,
+                updatedAt = x.UpdatedAt,
+                messageCount = x.ChatMessages.Count,
+                lastMessage = x.ChatMessages
+                    .OrderByDescending(m => m.CreatedAt)
+                    .Select(m => m.UserMessage)
+                    .FirstOrDefault()
+            })
+            .ToListAsync();
+
+        return Ok(conversations);
+    }
+
+    [HttpPost("conversations")]
+    public async Task<IActionResult> CreateConversation()
+    {
+        var conversation = new Conversation
+        {
+            Title = "New Chat",
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
+        };
+
+        _context.Conversations.Add(conversation);
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            id = conversation.Id,
+            title = conversation.Title,
+            createdAt = conversation.CreatedAt,
+            updatedAt = conversation.UpdatedAt
+        });
+    }
+
+    [HttpDelete("conversations/{id:int}")]
+    public async Task<IActionResult> DeleteConversation(int id)
+    {
+        var conversation = await _context.Conversations
+            .Include(x => x.ChatMessages)
+            .FirstOrDefaultAsync(x => x.Id == id);
+
+        if (conversation == null)
+        {
+            return NotFound(new
+            {
+                error = "Conversation not found."
+            });
+        }
+
+        foreach (var message in conversation.ChatMessages)
+        {
+            DeleteUploadedImageFile(message.UploadedImagePath);
+        }
+
+        _context.Conversations.Remove(conversation);
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Conversation deleted successfully."
+        });
+    }
+
+    [HttpPatch("conversations/{id:int}/title")]
+    public async Task<IActionResult> RenameConversation(
+        int id,
+        [FromBody] RenameConversationRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Title))
+        {
+            return BadRequest(new
+            {
+                error = "Conversation title cannot be empty."
+            });
+        }
+
+        var conversation = await _context.Conversations
+            .FirstOrDefaultAsync(x => x.Id == id);
+
+        if (conversation == null)
+        {
+            return NotFound(new
+            {
+                error = "Conversation not found."
+            });
+        }
+
+        conversation.Title = TrimTitle(request.Title);
+        conversation.UpdatedAt = DateTime.Now;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            id = conversation.Id,
+            title = conversation.Title,
+            updatedAt = conversation.UpdatedAt
+        });
+    }
+
+    [HttpGet("history")]
+    public async Task<IActionResult> GetHistory([FromQuery] int conversationId)
+    {
+        if (conversationId <= 0)
+        {
+            return BadRequest(new
+            {
+                error = "Conversation id is required."
+            });
+        }
+
+        var conversationExists = await _context.Conversations
+            .AnyAsync(x => x.Id == conversationId);
+
+        if (!conversationExists)
+        {
+            return NotFound(new
+            {
+                error = "Conversation not found."
+            });
+        }
+
         var chats = await _context.ChatMessages
-            .OrderByDescending(x => x.CreatedAt)
-            .Take(30)
+            .Where(x => x.ConversationId == conversationId)
             .OrderBy(x => x.CreatedAt)
             .Select(x => new
             {
                 id = x.Id,
+                conversationId = x.ConversationId,
                 userMessage = x.UserMessage,
                 aiResponse = x.AiResponse,
                 uploadedImagePath = x.UploadedImagePath,
@@ -57,38 +186,31 @@ public class ApiChatController : ControllerBase
     }
 
     [HttpDelete("clear")]
-    public async Task<IActionResult> ClearChatHistory()
+    public async Task<IActionResult> ClearAllChatHistory()
     {
         var messages = await _context.ChatMessages.ToListAsync();
 
         foreach (var message in messages)
         {
-            if (!string.IsNullOrWhiteSpace(message.UploadedImagePath))
-            {
-                var fullImagePath = Path.Combine(
-                    _environment.WebRootPath,
-                    message.UploadedImagePath
-                        .TrimStart('/')
-                        .Replace("/", Path.DirectorySeparatorChar.ToString()));
-
-                if (System.IO.File.Exists(fullImagePath))
-                {
-                    System.IO.File.Delete(fullImagePath);
-                }
-            }
+            DeleteUploadedImageFile(message.UploadedImagePath);
         }
 
+        var conversations = await _context.Conversations.ToListAsync();
+
         _context.ChatMessages.RemoveRange(messages);
+        _context.Conversations.RemoveRange(conversations);
+
         await _context.SaveChangesAsync();
 
         return Ok(new
         {
-            message = "Chat history cleared successfully."
+            message = "All chat history cleared successfully."
         });
     }
 
     [HttpPost("send")]
     public async Task<IActionResult> SendMessage(
+        [FromForm] int? conversationId,
         [FromForm] string? message,
         [FromForm] IFormFile? imageFile)
     {
@@ -97,6 +219,19 @@ public class ApiChatController : ControllerBase
             return BadRequest(new
             {
                 error = "Please write a message or upload an image."
+            });
+        }
+
+        var conversation = await GetOrCreateConversationAsync(
+            conversationId,
+            message,
+            imageFile != null);
+
+        if (conversation == null)
+        {
+            return NotFound(new
+            {
+                error = "Conversation not found."
             });
         }
 
@@ -117,6 +252,7 @@ public class ApiChatController : ControllerBase
                         .Replace("/", Path.DirectorySeparatorChar.ToString()));
 
                 var imagePrompt = BuildMemoryPrompt(
+                    conversation.Id,
                     string.IsNullOrWhiteSpace(message)
                         ? "Analyze this image clearly."
                         : message);
@@ -130,7 +266,9 @@ public class ApiChatController : ControllerBase
             }
             else
             {
-                var promptWithMemory = BuildMemoryPrompt(message!);
+                var promptWithMemory = BuildMemoryPrompt(
+                    conversation.Id,
+                    message!);
 
                 var routerResult = await _aiRouter.GenerateTextAsync(promptWithMemory);
 
@@ -143,8 +281,19 @@ public class ApiChatController : ControllerBase
             aiResponse = GetFriendlyAiError(ex);
         }
 
+        if (conversation.Title == "New Chat")
+        {
+            conversation.Title = GenerateConversationTitle(
+                message,
+                imageFile != null);
+        }
+
+        conversation.UpdatedAt = DateTime.Now;
+
         var chatMessage = new ChatMessage
         {
+            ConversationId = conversation.Id,
+
             UserMessage = string.IsNullOrWhiteSpace(message)
                 ? "[Image uploaded]"
                 : message,
@@ -160,6 +309,8 @@ public class ApiChatController : ControllerBase
         return Ok(new
         {
             chatMessage.Id,
+            chatMessage.ConversationId,
+            ConversationTitle = conversation.Title,
             chatMessage.UserMessage,
             chatMessage.AiResponse,
             chatMessage.UploadedImagePath,
@@ -168,9 +319,34 @@ public class ApiChatController : ControllerBase
         });
     }
 
-    private string BuildMemoryPrompt(string currentMessage)
+    private async Task<Conversation?> GetOrCreateConversationAsync(
+        int? conversationId,
+        string? message,
+        bool hasImage)
+    {
+        if (conversationId.HasValue && conversationId.Value > 0)
+        {
+            return await _context.Conversations
+                .FirstOrDefaultAsync(x => x.Id == conversationId.Value);
+        }
+
+        var conversation = new Conversation
+        {
+            Title = "New Chat",
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
+        };
+
+        _context.Conversations.Add(conversation);
+        await _context.SaveChangesAsync();
+
+        return conversation;
+    }
+
+    private string BuildMemoryPrompt(int conversationId, string currentMessage)
     {
         var previousMessages = _context.ChatMessages
+            .Where(x => x.ConversationId == conversationId)
             .OrderByDescending(x => x.CreatedAt)
             .Take(20)
             .OrderBy(x => x.CreatedAt)
@@ -186,6 +362,7 @@ public class ApiChatController : ControllerBase
         memoryBuilder.AppendLine("Be clear, direct, and concise.");
         memoryBuilder.AppendLine("Do not mention AI provider names such as Gemini, Groq, OpenRouter, Mistral, Cohere, HuggingFace, Cerebras, or GitHub Models.");
         memoryBuilder.AppendLine("Use previous conversation context only when it is relevant.");
+        memoryBuilder.AppendLine("Only use messages from the current conversation.");
         memoryBuilder.AppendLine("Do not repeat previous API quota, provider failure, or fallback error messages.");
         memoryBuilder.AppendLine("Do not invent personal information.");
         memoryBuilder.AppendLine("If the user asks for their name and the name is not available in the previous conversation, say that you do not know their name yet and ask them to tell you.");
@@ -285,4 +462,53 @@ public class ApiChatController : ControllerBase
 
         return $"/uploads/{fileName}";
     }
+
+    private void DeleteUploadedImageFile(string? uploadedImagePath)
+    {
+        if (string.IsNullOrWhiteSpace(uploadedImagePath))
+        {
+            return;
+        }
+
+        var fullImagePath = Path.Combine(
+            _environment.WebRootPath,
+            uploadedImagePath
+                .TrimStart('/')
+                .Replace("/", Path.DirectorySeparatorChar.ToString()));
+
+        if (System.IO.File.Exists(fullImagePath))
+        {
+            System.IO.File.Delete(fullImagePath);
+        }
+    }
+
+    private string GenerateConversationTitle(string? message, bool hasImage)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            return hasImage ? "Image Chat" : "New Chat";
+        }
+
+        return TrimTitle(message);
+    }
+
+    private string TrimTitle(string title)
+    {
+        var cleanTitle = title
+            .Replace("\r", " ")
+            .Replace("\n", " ")
+            .Trim();
+
+        if (cleanTitle.Length > 45)
+        {
+            cleanTitle = cleanTitle[..45] + "...";
+        }
+
+        return cleanTitle;
+    }
+}
+
+public class RenameConversationRequest
+{
+    public string Title { get; set; } = string.Empty;
 }
