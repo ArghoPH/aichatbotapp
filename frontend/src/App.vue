@@ -6,7 +6,7 @@
         class="mb-5 flex flex-shrink-0 items-center justify-between rounded-3xl border border-white/10 bg-white/10 px-6 py-4 shadow-2xl backdrop-blur-xl">
         <div class="flex items-center gap-2">
           <span class="inline-block h-3 w-3 animate-pulse rounded-full bg-blue-500"></span>
-          <span class="text-sm font-medium text-slate-300">AI Dashboard</span>
+          <span class="text-sm font-medium text-slate-300">Argho's Custom AI</span>
         </div>
 
         <div class="flex items-center gap-3">
@@ -17,11 +17,11 @@
             <span>New Chat</span>
           </button>
 
-          <button
+          <!-- <button
             class="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/10 transition hover:bg-white/20"
             title="Theme">
             <i class="fa-solid fa-sun text-yellow-300"></i>
-          </button>
+          </button> -->
         </div>
       </header>
 
