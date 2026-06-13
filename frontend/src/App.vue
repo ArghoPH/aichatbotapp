@@ -121,6 +121,13 @@
                   <div class="rounded-3xl rounded-tl-md border border-white/10 bg-slate-800/90 px-5 py-4 shadow-xl">
                     <div class="chat-markdown" v-html="renderMarkdown(message.text)"></div>
 
+                    <a v-if="message.generatedImagePath" :href="message.generatedImagePath"
+                      :download="getGeneratedImageFileName(message.generatedImagePath)"
+                      class="mt-4 inline-flex items-center gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-500/20">
+                      <i class="fa-solid fa-download"></i>
+                      Download Image
+                    </a>
+
                     <div class="mt-3 text-[11px] text-slate-500">
                       <i class="fa-regular fa-clock mr-1"></i>
                       {{ message.time }}
@@ -517,6 +524,7 @@ async function loadHistory(conversationId = activeConversationId.value) {
         role: 'ai',
         text: cleanAiText(aiResponse),
         providerName: null,
+        generatedImagePath: extractGeneratedImagePath(aiResponse),
         time: formatTime(createdAt)
       })
     })
@@ -618,6 +626,24 @@ function formatCooldown(cooldownUntil) {
   return until.toLocaleTimeString()
 }
 
+function extractGeneratedImagePath(text) {
+  if (!text) {
+    return null
+  }
+
+  const match = text.match(/!\[Generated Image\]\(([^)]+)\)/i)
+
+  return match ? match[1] : null
+}
+
+function getGeneratedImageFileName(path) {
+  if (!path) {
+    return 'generated-image.png'
+  }
+
+  return path.split('/').pop() || 'generated-image.png'
+}
+
 async function sendMessage() {
   if (!messageText.value.trim() && !selectedFile.value) {
     return
@@ -698,6 +724,10 @@ async function sendMessage() {
       role: 'ai',
       text: cleanAiText(data.aiResponse),
       providerName: data.providerName || null,
+      generatedImagePath:
+        data.generatedImagePath ||
+        data.GeneratedImagePath ||
+        extractGeneratedImagePath(data.aiResponse),
       time: formatTime(data.createdAt)
     })
 
