@@ -5,20 +5,7 @@
       <!-- Header -->
       <header
         class="mb-5 flex items-center justify-between rounded-3xl border border-white/10 bg-white/10 px-6 py-4 shadow-2xl backdrop-blur-xl">
-        <div class="flex items-center gap-4">
-          <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 shadow-lg shadow-blue-600/30">
-            <i class="fa-solid fa-robot text-2xl"></i>
-          </div>
 
-          <div>
-            <h1 class="text-2xl font-bold tracking-tight">
-              AI Smart Chatbot
-            </h1>
-            <p class="text-sm text-slate-300">
-              Vue + Tailwind + Gemini AI + SQL Server
-            </p>
-          </div>
-        </div>
 
         <button
           class="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/10 transition hover:bg-white/20"
@@ -104,7 +91,7 @@
                     <div class="flex h-7 w-7 items-center justify-center rounded-full bg-slate-700">
                       <i class="fa-solid fa-robot text-xs text-blue-300"></i>
                     </div>
-                    <span>Gemini AI</span>
+                    <span>Argho's Custom AI</span>
                   </div>
 
                   <div class="rounded-3xl rounded-tl-md border border-white/10 bg-slate-800/90 px-5 py-4 shadow-xl">
@@ -239,6 +226,13 @@
 </template>
 
 <script setup>
+function cleanAiText(text) {
+  if (!text) {
+    return ''
+  }
+
+  return text.replace(/^\[[^\]]+\]\s*\n?/, '').trim()
+}
 import { nextTick, onMounted, ref } from 'vue'
 
 const messageText = ref('')
@@ -292,19 +286,39 @@ async function loadHistory() {
     const loadedMessages = []
 
     data.forEach(chat => {
+      const userMessage =
+        chat.userMessage ??
+        chat.UserMessage ??
+        '[Message unavailable]'
+
+      const aiResponse =
+        chat.aiResponse ??
+        chat.AiResponse ??
+        ''
+
+      const uploadedImagePath =
+        chat.uploadedImagePath ??
+        chat.UploadedImagePath ??
+        null
+
+      const createdAt =
+        chat.createdAt ??
+        chat.CreatedAt ??
+        null
+
       loadedMessages.push({
-        id: `user-${chat.id}`,
+        id: `user-${chat.id ?? chat.Id}`,
         role: 'user',
-        text: chat.userMessage,
-        imagePreview: chat.uploadedImagePath,
-        time: formatTime(chat.createdAt)
+        text: userMessage,
+        imagePreview: uploadedImagePath,
+        time: formatTime(createdAt)
       })
 
       loadedMessages.push({
-        id: `ai-${chat.id}`,
+        id: `ai-${chat.id ?? chat.Id}`,
         role: 'ai',
-        text: chat.aiResponse,
-        time: formatTime(chat.createdAt)
+        text: cleanAiText(aiResponse),
+        time: formatTime(createdAt)
       })
     })
 
@@ -409,7 +423,7 @@ async function sendMessage() {
     messages.value.push({
       id: `ai-${data.id}`,
       role: 'ai',
-      text: data.aiResponse,
+      text: cleanAiText(data.aiResponse),
       time: formatTime(data.createdAt)
     })
 
