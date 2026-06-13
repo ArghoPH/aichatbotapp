@@ -28,8 +28,15 @@ builder.Services.AddScoped<IAiTextProvider, CohereTextProvider>();
 builder.Services.AddScoped<IAiTextProvider, HuggingFaceTextProvider>();
 builder.Services.AddScoped<IAiTextProvider, CerebrasTextProvider>();
 
-// AI Provider Router
+// AI Text Provider Router
 builder.Services.AddScoped<AiProviderRouterService>();
+
+// AI Vision Provider fallback chain
+builder.Services.AddScoped<IAiVisionProvider, GeminiVisionProvider>();
+builder.Services.AddScoped<IAiVisionProvider, GitHubModelsVisionProvider>();
+
+// AI Vision Provider Router
+builder.Services.AddScoped<AiVisionRouterService>();
 
 // Session
 builder.Services.AddDistributedMemoryCache();

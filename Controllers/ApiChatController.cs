@@ -12,19 +12,19 @@ namespace AiChatbotApp.Controllers;
 public class ApiChatController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
-    private readonly GeminiService _geminiService;
     private readonly AiProviderRouterService _aiRouter;
+    private readonly AiVisionRouterService _visionRouter;
     private readonly IWebHostEnvironment _environment;
 
     public ApiChatController(
         ApplicationDbContext context,
-        GeminiService geminiService,
         AiProviderRouterService aiRouter,
+        AiVisionRouterService visionRouter,
         IWebHostEnvironment environment)
     {
         _context = context;
-        _geminiService = geminiService;
         _aiRouter = aiRouter;
+        _visionRouter = visionRouter;
         _environment = environment;
     }
 
@@ -112,16 +112,21 @@ public class ApiChatController : ControllerBase
 
                 var fullImagePath = Path.Combine(
                     _environment.WebRootPath,
-                    uploadedImagePath.TrimStart('/').Replace("/", Path.DirectorySeparatorChar.ToString()));
+                    uploadedImagePath
+                        .TrimStart('/')
+                        .Replace("/", Path.DirectorySeparatorChar.ToString()));
 
                 var imagePrompt = BuildMemoryPrompt(
-                    message ?? "Analyze this image clearly.");
+                    string.IsNullOrWhiteSpace(message)
+                        ? "Analyze this image clearly."
+                        : message);
 
-                providerName = "Gemini Vision";
-
-                aiResponse = await _geminiService.AnalyzeImageAsync(
+                var visionResult = await _visionRouter.AnalyzeImageAsync(
                     imagePrompt,
                     fullImagePath);
+
+                providerName = visionResult.ProviderName;
+                aiResponse = visionResult.Text;
             }
             else
             {
@@ -141,8 +146,8 @@ public class ApiChatController : ControllerBase
         var chatMessage = new ChatMessage
         {
             UserMessage = string.IsNullOrWhiteSpace(message)
-         ? "[Image uploaded]"
-         : message,
+                ? "[Image uploaded]"
+                : message,
 
             AiResponse = aiResponse,
             UploadedImagePath = uploadedImagePath,
@@ -179,7 +184,7 @@ public class ApiChatController : ControllerBase
         memoryBuilder.AppendLine("You are a helpful AI assistant for this web application.");
         memoryBuilder.AppendLine("Reply in the same language as the current user message.");
         memoryBuilder.AppendLine("Be clear, direct, and concise.");
-        memoryBuilder.AppendLine("Do not mention AI provider names such as Gemini, Groq, OpenRouter, Mistral, Cohere, HuggingFace, or Cerebras.");
+        memoryBuilder.AppendLine("Do not mention AI provider names such as Gemini, Groq, OpenRouter, Mistral, Cohere, HuggingFace, Cerebras, or GitHub Models.");
         memoryBuilder.AppendLine("Use previous conversation context only when it is relevant.");
         memoryBuilder.AppendLine("Do not repeat previous API quota, provider failure, or fallback error messages.");
         memoryBuilder.AppendLine("Do not invent personal information.");
@@ -241,12 +246,15 @@ public class ApiChatController : ControllerBase
 
     private string GetFriendlyAiError(Exception ex)
     {
-        if (ex.Message.Contains("RESOURCE_EXHAUSTED") || ex.Message.Contains("quota"))
+        if (ex.Message.Contains("RESOURCE_EXHAUSTED") ||
+            ex.Message.Contains("quota", StringComparison.OrdinalIgnoreCase) ||
+            ex.Message.Contains("rate limit", StringComparison.OrdinalIgnoreCase))
         {
-            return "AI quota limit reached. Please wait a little and try again later.";
+            return "AI quota or rate limit reached. Please wait a little and try again later.";
         }
 
-        if (ex.Message.Contains("UNAVAILABLE") || ex.Message.Contains("503"))
+        if (ex.Message.Contains("UNAVAILABLE") ||
+            ex.Message.Contains("503"))
         {
             return "AI service is busy right now. Please try again after a moment.";
         }
