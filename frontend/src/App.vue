@@ -203,29 +203,37 @@
               </div>
 
               <div v-else class="space-y-2">
-                <button v-for="conversation in conversations" :key="conversation.id"
-                  @click="selectConversation(conversation)"
-                  class="w-full text-left rounded-xl px-3 py-2.5 text-xs transition border flex items-center gap-2"
-                  :class="conversation.id === activeConversationId
-                    ? 'bg-blue-500/15 border-blue-500/30'
-                    : 'bg-white/5 hover:bg-white/10 border-white/5'">
-                  <i class="fa-regular fa-message text-sm"
-                    :class="conversation.id === activeConversationId ? 'text-blue-300' : 'text-slate-400'"></i>
+                <div v-for="conversation in conversations" :key="conversation.id"
+                  class="group flex items-stretch gap-2">
+                  <button @click="selectConversation(conversation)"
+                    class="min-w-0 flex-1 text-left rounded-xl px-3 py-2.5 text-xs transition border flex items-center gap-2"
+                    :class="conversation.id === activeConversationId
+                      ? 'bg-blue-500/15 border-blue-500/30'
+                      : 'bg-white/5 hover:bg-white/10 border-white/5'">
+                    <i class="fa-regular fa-message text-sm"
+                      :class="conversation.id === activeConversationId ? 'text-blue-300' : 'text-slate-400'"></i>
 
-                  <div class="truncate flex-1">
-                    <p class="font-medium truncate text-slate-200">
-                      {{ conversation.title }}
-                    </p>
+                    <div class="truncate flex-1">
+                      <p class="font-medium truncate text-slate-200">
+                        {{ conversation.title }}
+                      </p>
 
-                    <span class="block truncate text-[10px] text-slate-500">
-                      {{ conversation.lastMessage || 'No messages yet' }}
-                    </span>
+                      <span class="block truncate text-[10px] text-slate-500">
+                        {{ conversation.lastMessage || 'No messages yet' }}
+                      </span>
 
-                    <span class="text-[10px] text-slate-600">
-                      {{ formatTime(conversation.updatedAt) }}
-                    </span>
-                  </div>
-                </button>
+                      <span class="text-[10px] text-slate-600">
+                        {{ formatTime(conversation.updatedAt) }}
+                      </span>
+                    </div>
+                  </button>
+
+                  <button type="button" @click.stop="deleteConversation(conversation)"
+                    class="flex w-10 flex-shrink-0 items-center justify-center rounded-xl border border-red-500/20 bg-red-500/10 text-red-300 transition hover:bg-red-500/20"
+                    title="Delete conversation">
+                    <i class="fa-solid fa-trash text-xs"></i>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -523,12 +531,12 @@ async function loadHistory(conversationId = activeConversationId.value) {
   }
 }
 
-async function deleteActiveConversation() {
-  if (!activeConversationId.value) {
+async function deleteConversation(conversation) {
+  if (!conversation || !conversation.id) {
     return
   }
 
-  const confirmed = confirm('Delete this conversation? This will not delete other recent chats.')
+  const confirmed = confirm(`Delete "${conversation.title}"? This will remove only this conversation.`)
 
   if (!confirmed) {
     return
@@ -537,7 +545,9 @@ async function deleteActiveConversation() {
   try {
     errorMessage.value = ''
 
-    const response = await fetch(`/api/chat/conversations/${activeConversationId.value}`, {
+    const deletingActiveConversation = conversation.id === activeConversationId.value
+
+    const response = await fetch(`/api/chat/conversations/${conversation.id}`, {
       method: 'DELETE'
     })
 
@@ -545,14 +555,27 @@ async function deleteActiveConversation() {
       throw new Error('Failed to delete conversation.')
     }
 
-    activeConversationId.value = null
-    activeConversationTitle.value = 'New Chat'
-    messages.value = []
+    if (deletingActiveConversation) {
+      activeConversationId.value = null
+      activeConversationTitle.value = 'New Chat'
+      messages.value = []
+    }
 
-    await loadConversations(true)
+    await loadConversations(deletingActiveConversation)
   } catch (error) {
     errorMessage.value = error.message
   }
+}
+
+async function deleteActiveConversation() {
+  if (!activeConversationId.value) {
+    return
+  }
+
+  await deleteConversation({
+    id: activeConversationId.value,
+    title: activeConversationTitle.value
+  })
 }
 
 async function loadProviderStatuses() {
