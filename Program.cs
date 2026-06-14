@@ -2,8 +2,13 @@ using AiChatbotApp.Data;
 using AiChatbotApp.Services;
 using AiChatbotApp.Services.Providers;
 using Microsoft.EntityFrameworkCore;
-
+// Add services to the container.
 var builder = WebApplication.CreateBuilder(args);
+
+// Set port
+var port = Environment.GetEnvironmentVariable("PORT") ?? "5077";
+
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 // MVC + API Controllers
 builder.Services.AddControllersWithViews();
