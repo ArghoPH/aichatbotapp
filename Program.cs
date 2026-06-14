@@ -106,6 +106,8 @@ app.UseAuthorization();
 // /api/chat/providers/status
 app.MapControllers();
 
+app.MapGet("/health", () => Results.Ok("Healthy"));
+
 // Old MVC route, not main frontend anymore
 app.MapControllerRoute(
     name: "default",
