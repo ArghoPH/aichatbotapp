@@ -72,6 +72,13 @@ builder.Services.AddSession(options =>
 
 var app = builder.Build();
 
+// Migrate database
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    dbContext.Database.Migrate();
+}
+
 // HTTP request pipeline
 if (!app.Environment.IsDevelopment())
 {
@@ -86,6 +93,8 @@ if (!app.Environment.IsDevelopment())
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseCors("FrontendPolicy");
 
 app.UseSession();
 
