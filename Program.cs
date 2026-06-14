@@ -29,7 +29,7 @@ builder.Services.AddCors(options =>
 
 // Database Context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(
+    options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // HttpClient for external AI API calls
