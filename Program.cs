@@ -13,6 +13,20 @@ builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 // MVC + API Controllers
 builder.Services.AddControllersWithViews();
 
+// CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontendPolicy", policy =>
+    {
+        policy
+            .WithOrigins(
+                "http://localhost:5173",
+                "https://YOUR-VERCEL-APP.vercel.app")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 // Database Context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
