@@ -113,10 +113,11 @@
 
                     <span>Argho's Custom AI</span>
 
-                    <span v-if="message.providerName"
+                    <!-- Provider Name Hidden, if needed reopen -->
+                    <!-- <span v-if="message.providerName"
                       class="rounded-full border border-blue-500/20 bg-blue-500/10 px-2 py-0.5 text-[10px] text-blue-300">
                       {{ message.providerName }}
-                    </span>
+                    </span> -->
                   </div>
 
                   <div class="rounded-3xl rounded-tl-md border border-white/10 bg-slate-800/90 px-5 py-4 shadow-xl">
@@ -245,7 +246,8 @@
               </div>
             </div>
 
-            <div class="rounded-3xl border border-white/10 bg-white/10 p-5 shadow-2xl backdrop-blur-xl">
+            <!-- provider Status -->
+            <!-- <div class="rounded-3xl border border-white/10 bg-white/10 p-5 shadow-2xl backdrop-blur-xl">
               <h2 class="mb-4 text-lg font-bold">
                 <i class="fa-solid fa-signal mr-2 text-emerald-300"></i>
                 Provider Status
@@ -280,7 +282,7 @@
                   </div>
                 </div>
               </div>
-            </div>
+            </div> -->
 
             <div class="rounded-3xl border border-white/10 bg-white/10 p-5 shadow-2xl backdrop-blur-xl">
               <h2 class="mb-2 text-sm font-bold text-slate-400 uppercase tracking-wider">
