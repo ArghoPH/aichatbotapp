@@ -297,7 +297,7 @@
                 </p>
                 <p>
                   <span class="text-slate-300 font-medium">Database:</span>
-                  SQL Server
+                  PostgreSQL
                 </p>
                 <p>
                   <span class="text-slate-300 font-medium">Text AI:</span>
