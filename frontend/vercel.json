@@ -1,0 +1,16 @@
+{
+    "rewrites": [
+        {
+            "source": "/api/:path*",
+            "destination": "https://aichatbotapp-1u1i.onrender.com/api/:path*"
+        },
+        {
+            "source": "/uploads/:path*",
+            "destination": "https://aichatbotapp-1u1i.onrender.com/uploads/:path*"
+        },
+        {
+            "source": "/generated/:path*",
+            "destination": "https://aichatbotapp-1u1i.onrender.com/generated/:path*"
+        }
+    ]
+}
