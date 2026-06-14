@@ -2,6 +2,7 @@ D:\Personal Learning\dotnet\AiChatbotApp\bin\Debug\net9.0\appsettings.Developmen
 D:\Personal Learning\dotnet\AiChatbotApp\bin\Debug\net9.0\appsettings.json
 D:\Personal Learning\dotnet\AiChatbotApp\bin\Debug\net9.0\frontend\package-lock.json
 D:\Personal Learning\dotnet\AiChatbotApp\bin\Debug\net9.0\frontend\package.json
+D:\Personal Learning\dotnet\AiChatbotApp\bin\Debug\net9.0\frontend\vercel.json
 D:\Personal Learning\dotnet\AiChatbotApp\bin\Debug\net9.0\package-lock.json
 D:\Personal Learning\dotnet\AiChatbotApp\bin\Debug\net9.0\package.json
 D:\Personal Learning\dotnet\AiChatbotApp\bin\Debug\net9.0\AiChatbotApp.staticwebassets.runtime.json
@@ -53,6 +54,8 @@ D:\Personal Learning\dotnet\AiChatbotApp\bin\Debug\net9.0\Microsoft.SqlServer.Se
 D:\Personal Learning\dotnet\AiChatbotApp\bin\Debug\net9.0\Microsoft.Win32.SystemEvents.dll
 D:\Personal Learning\dotnet\AiChatbotApp\bin\Debug\net9.0\Mono.TextTemplating.dll
 D:\Personal Learning\dotnet\AiChatbotApp\bin\Debug\net9.0\Newtonsoft.Json.dll
+D:\Personal Learning\dotnet\AiChatbotApp\bin\Debug\net9.0\Npgsql.dll
+D:\Personal Learning\dotnet\AiChatbotApp\bin\Debug\net9.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
 D:\Personal Learning\dotnet\AiChatbotApp\bin\Debug\net9.0\OpenAI.dll
 D:\Personal Learning\dotnet\AiChatbotApp\bin\Debug\net9.0\System.ClientModel.dll
 D:\Personal Learning\dotnet\AiChatbotApp\bin\Debug\net9.0\System.CodeDom.dll
@@ -244,5 +247,3 @@ D:\Personal Learning\dotnet\AiChatbotApp\obj\Debug\net9.0\refint\AiChatbotApp.dl
 D:\Personal Learning\dotnet\AiChatbotApp\obj\Debug\net9.0\AiChatbotApp.pdb
 D:\Personal Learning\dotnet\AiChatbotApp\obj\Debug\net9.0\AiChatbotApp.genruntimeconfig.cache
 D:\Personal Learning\dotnet\AiChatbotApp\obj\Debug\net9.0\ref\AiChatbotApp.dll
-D:\Personal Learning\dotnet\AiChatbotApp\bin\Debug\net9.0\Npgsql.dll
-D:\Personal Learning\dotnet\AiChatbotApp\bin\Debug\net9.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll

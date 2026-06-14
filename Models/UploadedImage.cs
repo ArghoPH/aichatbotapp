@@ -10,5 +10,5 @@ public class UploadedImage
 
     public string FilePath { get; set; } = string.Empty;
 
-    public DateTime UploadedAt { get; set; } = DateTime.Now;
+    public DateTime UploadedAt { get; set; } = DateTime.UtcNow;
 }

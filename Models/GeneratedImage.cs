@@ -8,5 +8,5 @@ public class GeneratedImage
 
     public string ImageUrl { get; set; } = string.Empty;
 
-    public DateTime GeneratedAt { get; set; } = DateTime.Now;
+    public DateTime GeneratedAt { get; set; } = DateTime.UtcNow;
 }

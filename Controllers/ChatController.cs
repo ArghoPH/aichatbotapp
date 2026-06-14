@@ -115,7 +115,7 @@ public class ChatController : Controller
             UserMessage = model.Message ?? "[Image uploaded]",
             AiResponse = aiResponse,
             UploadedImagePath = uploadedImagePath,
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow
         };
 
         _context.ChatMessages.Add(chatMessage);
@@ -139,7 +139,7 @@ public class ChatController : Controller
         {
             Prompt = model.ImagePrompt,
             ImageUrl = imageUrl,
-            GeneratedAt = DateTime.Now
+            GeneratedAt = DateTime.UtcNow
         };
 
         _context.GeneratedImages.Add(generatedImage);

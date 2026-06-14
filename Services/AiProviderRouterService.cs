@@ -93,7 +93,7 @@ public class AiProviderRouterService
 
                 if (Cooldowns.TryGetValue(provider.Name, out var storedCooldownUntil))
                 {
-                    if (DateTime.Now < storedCooldownUntil)
+                    if (DateTime.UtcNow < storedCooldownUntil)
                     {
                         cooldownUntil = storedCooldownUntil;
                     }
@@ -119,7 +119,7 @@ public class AiProviderRouterService
             return false;
         }
 
-        if (DateTime.Now >= cooldownUntil)
+        if (DateTime.UtcNow >= cooldownUntil)
         {
             Cooldowns.TryRemove(providerName, out _);
             return false;
@@ -130,6 +130,6 @@ public class AiProviderRouterService
 
     private void SetCooldown(string providerName, TimeSpan duration)
     {
-        Cooldowns[providerName] = DateTime.Now.Add(duration);
+        Cooldowns[providerName] = DateTime.UtcNow.Add(duration);
     }
 }

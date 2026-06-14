@@ -59,8 +59,8 @@ public class ApiChatController : ControllerBase
         var conversation = new Conversation
         {
             Title = "New Chat",
-            CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
 
         _context.Conversations.Add(conversation);
@@ -129,7 +129,7 @@ public class ApiChatController : ControllerBase
         }
 
         conversation.Title = TrimTitle(request.Title);
-        conversation.UpdatedAt = DateTime.Now;
+        conversation.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
 
@@ -311,7 +311,7 @@ public class ApiChatController : ControllerBase
                 imageFile != null);
         }
 
-        conversation.UpdatedAt = DateTime.Now;
+        conversation.UpdatedAt = DateTime.UtcNow;
 
         var chatMessage = new ChatMessage
         {
@@ -323,7 +323,7 @@ public class ApiChatController : ControllerBase
 
             AiResponse = aiResponse,
             UploadedImagePath = uploadedImagePath,
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow
         };
 
         _context.ChatMessages.Add(chatMessage);
@@ -357,8 +357,8 @@ public class ApiChatController : ControllerBase
         var conversation = new Conversation
         {
             Title = "New Chat",
-            CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
 
         _context.Conversations.Add(conversation);
