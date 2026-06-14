@@ -57,7 +57,8 @@
             </div>
           </div>
 
-          <div ref="chatBody" class="custom-scrollbar min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-6">
+          <div ref="chatBody" @click="handleChatMarkdownClick"
+            class="custom-scrollbar min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-6">
             <div v-if="messages.length === 0 && !isLoadingHistory"
               class="flex h-full flex-col items-center justify-center text-center">
               <div
@@ -328,6 +329,74 @@ const markdownRenderer = new MarkdownIt({
   breaks: true,
   typographer: true
 })
+
+markdownRenderer.renderer.rules.fence = function (tokens, idx) {
+  const token = tokens[idx]
+  const code = token.content
+  const language = token.info ? token.info.trim() : 'code'
+
+  const escapedCode = markdownRenderer.utils.escapeHtml(code)
+  const encodedCode = encodeURIComponent(code)
+
+  return `
+    <div class="code-block-wrapper">
+      <div class="code-block-header">
+        <span class="code-block-language">${language || 'code'}</span>
+        <button
+          type="button"
+          class="copy-code-button"
+          data-code="${encodedCode}"
+        >
+          <i class="fa-regular fa-copy"></i>
+          Copy
+        </button>
+      </div>
+      <pre><code class="language-${language}">${escapedCode}</code></pre>
+    </div>
+  `
+}
+
+async function handleChatMarkdownClick(event) {
+  const target = event.target
+
+  if (!(target instanceof Element)) {
+    return
+  }
+
+  const button = target.closest('.copy-code-button')
+
+  if (!button) {
+    return
+  }
+
+  const encodedCode = button.getAttribute('data-code')
+
+  if (!encodedCode) {
+    return
+  }
+
+  const code = decodeURIComponent(encodedCode)
+
+  try {
+    await navigator.clipboard.writeText(code)
+
+    const oldHtml = button.innerHTML
+
+    button.innerHTML = `
+      <i class="fa-solid fa-check"></i>
+      Copied!
+    `
+
+    button.classList.add('copied')
+
+    setTimeout(() => {
+      button.innerHTML = oldHtml
+      button.classList.remove('copied')
+    }, 1300)
+  } catch {
+    errorMessage.value = 'Failed to copy code.'
+  }
+}
 
 function renderMarkdown(text) {
   if (!text) {
